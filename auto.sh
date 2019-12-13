@@ -34,9 +34,15 @@ for i in *.h;do
       cd $destination_folder
       #sed -i 's/npl-leaderboard/$destination_folder/g' Doxyfile
       doxygen
-      moxygen.js -n -o $destination_folder.md xml
+      moxygen.js -n -t C:/Users/SHS1654/Desktop/xml--md/moxygen/templates/cpp -o $destination_folder.md xml
       sed -i '/iEvtType/d' $destination_folder.md
       sed -i '/Generat/d' $destination_folder.md
       winpty C:\\Users\\SHS1654\\Desktop\\jihuayi\\CHeaderToConfluceTool\\auto.bat $destination_folder.md $destination_folder.txt
+      mkdir json
+      doxybook2 -i xml -o json -j
+      rm -f Doxyfile
+      cd xml
+      xsltproc combine.xslt index.xml >all.xml
+      cd ..
       cd ..
 done

@@ -9,7 +9,11 @@ install tools/doxygen.exe
 
 add doxygen/bin to path
 
-add tools/moxygen/bin to path
+npm install moxygen
+
+copy tools/doxybook2/bin to git/usr/bin
+
+copy tools/xsltproc/xyz/bin to git/usr/bin
 
 
 
