@@ -37,6 +37,7 @@ for i in *.h;do
       moxygen.js -n -t C:/Users/SHS1654/Desktop/xml--md/moxygen/templates/cpp -o $destination_folder.md xml
       sed -i '/iEvtType/d' $destination_folder.md
       sed -i '/Generat/d' $destination_folder.md
+      sed -i 's/__t/_t/g' $destination_folder.md
       winpty C:\\Users\\SHS1654\\Desktop\\jihuayi\\CHeaderToConfluceTool\\auto.bat $destination_folder.md $destination_folder.txt
       mkdir json
       doxybook2 -i xml -o json -j
