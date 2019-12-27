@@ -406,8 +406,8 @@ namespace npl
 		/// \brief  设置大厅数据
 		///
 		/// \param  lobbyID 大厅ID
-		/// \param  key   大厅数据名
-		/// \param  value 大厅数据值(字符串类型)
+		/// \param  key   大厅数据名  (0, NPL_MATCHMAKING_MAX_DATA_KEY)
+		/// \param  value 大厅数据值(字符串类型) (0, NPL_MATCHMAKING_MAX_DATA_VALUE)
 		/// \return 是否设置成功
 		/// 
 		/// \note   设置用户应是大厅创建者
@@ -419,7 +419,7 @@ namespace npl
 		/// \brief  设置大厅数据
 		///
 		/// \param  lobbyID 大厅ID
-		/// \param  key   大厅数据名
+		/// \param  key   大厅数据名  (0, NPL_MATCHMAKING_MAX_DATA_KEY)
 		/// \param  value 大厅数据值(数值类型)
 		/// \return 是否设置成功
 		/// 
@@ -446,7 +446,7 @@ namespace npl
 		/// \param  lobbyID 大厅ID
 		/// \return 异步请求的Token
 		/// 
-		/// \note   提交用户应是大厅创建者
+		/// \note   提交用户应是大厅创建者, all-of lobby-data to json length 应小于 NPL_MATCHMAKING_MAX_DATA_TOTAL_LENGTH
 		/// \see    RegistCallback cbMatchmakingRequestResult_t
 		///
 		virtual long CommitLobbyData(const NPL_LBYID& lobbyID) = 0;
