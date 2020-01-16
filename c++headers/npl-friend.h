@@ -381,14 +381,13 @@ struct cbChatQueryMsgLog_t
 };
 
 ///
-/// \brief 查询聊天日志
+/// \brief 收到加入游戏邀请
 ///
-struct cbChatQueryTeamMsgLog_t
+struct cbGameRichPresenceJoinRequested_t
 {
 	enum { iEvtType = enNplChat + 31 };
-	char teamId[NPL_CHAT_MAX_MSG_ID_LEN];			/// 群ID
-	uint32_t msgCount;
-	cbChatReceiveMsg_t* msgs;					/// 聊天日志信息
+	NPL_USRID friendId;
+	char chConnect[MAX_RICH_PRESENCE_VALUE_LENGTH]; /// 好友发送过来的连接字符串
 };
 
 #pragma pack(pop)
@@ -1001,14 +1000,14 @@ namespace npl
 		/// 
 		virtual void QueryChatTeamAllMembers(cstr_t teamId) = 0;
 
-    ///
-    /// \brief 查询单个群信息
-    ///
-    /// \param teamId 群聊id
-    ///
-    /// \see RegistEvent cbChatTeamEventInfo_t
-    ///
-    virtual void QueryChatTeam(cstr_t teamId) = 0;
+		///
+		/// \brief 查询单个群信息
+		///
+		/// \param teamId 群聊id
+		///
+		/// \see RegistEvent cbChatTeamEventInfo_t
+		///
+		virtual void QueryChatTeam(cstr_t teamId) = 0;
 
 		///
 		/// \brief 查询单个群成员信息
@@ -1050,6 +1049,16 @@ namespace npl
 		/// \see RegistEvent cbChatQueryMsgLog_t
 		///
 		virtual void QueryTeamChatMessageLog(cstr_t id, sint32_t limitCount, uint64_t fromTime, uint64_t endTime) = 0;
+
+		///
+		/// \brief  邀请好友加入游戏
+		///
+		/// \param  friendId 被邀请的好友
+		/// \param  pchConnectString 被邀请的好友
+		///
+		/// \see RegistEvent cbGameRichPresenceJoinRequested_t
+		///
+		virtual bool InviteUserToGame(NPL_USRID friendId, const char* pchConnectString) = 0;
 	};
 }
 #endif // __NPL_C_INTERFACE__

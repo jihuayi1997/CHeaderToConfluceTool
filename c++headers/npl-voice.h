@@ -165,11 +165,11 @@ namespace npl
 		/// \param channelType 自定义的通道类型，比如"team", "clan", "friends"...
 		/// \param sessionName 自定义的会话名称
 		/// 
-		/// \see RegistEvent cbVoiceCreate_t
+		/// \see RegistCallback cbVoiceCreate_t
 		///
 		/// \note 由channelType和sessionName可确定一个会话房间，同一房间内的session可以互相通话
 		///
-		virtual void createSession(cstr_t channelType, cstr_t sessionName) = 0;
+		virtual long createSession(cstr_t channelType, cstr_t sessionName) = 0;
 
 		///
 		/// \brief 销毁的会话

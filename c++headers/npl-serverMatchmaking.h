@@ -80,40 +80,40 @@ struct cbQueryServers_t
 class INplServerMatchmakingPingResponse
 {
 public:
-	/// Server has responded successfully and has updated data
+	// Server has responded successfully and has updated data
 	virtual void ServerResponded(ServerDetail_t& detail) = 0;
 
-	/// Server failed to respond to the ping request
+	// Server failed to respond to the ping request
 	virtual void ServerFailedToRespond() = 0;
 };
 
 class INplServerMatchmakingPlayersResponse
 {
 public:
-	/// Got data on a new player on the server -- you'll get this callback once per player
-	/// on the server which you have requested player data on.
+	// Got data on a new player on the server -- you'll get this callback once per player
+	// on the server which you have requested player data on.
 	virtual void AddPlayerToList(NPL_USRID uid, const char *pchName, int nScore, float flTimePlayed) = 0;
 
-	/// The server failed to respond to the request for player details
+	// The server failed to respond to the request for player details
 	virtual void PlayersFailedToRespond() = 0;
 
-	/// The server has finished responding to the player details request 
-	/// (ie, you won't get anymore AddPlayerToList callbacks)
+	// The server has finished responding to the player details request 
+	// (ie, you won't get anymore AddPlayerToList callbacks)
 	virtual void PlayersRefreshComplete() = 0;
 };
 
 class INplServerMatchmakingRulesResponse
 {
 public:
-	/// Got data on a rule on the server -- you'll get one of these per rule defined on
-	/// the server you are querying
+	// Got data on a rule on the server -- you'll get one of these per rule defined on
+	// the server you are querying
 	virtual void RulesResponded(const char *pchRule, const char *pchValue) = 0;
 
-	/// The server failed to respond to the request for rule details
+	// The server failed to respond to the request for rule details
 	virtual void RulesFailedToRespond() = 0;
 
-	/// The server has finished responding to the rule details request 
-	/// (ie, you won't get anymore RulesResponded callbacks)
+	// The server has finished responding to the rule details request 
+	// (ie, you won't get anymore RulesResponded callbacks)
 	virtual void RulesRefreshComplete() = 0;
 };
 
@@ -282,5 +282,5 @@ namespace npl
 		virtual void CancelServerQuery(long tok) = 0;
 	};
 };
-#endif /// __NPL_C_INTERFACE__
-#endif /// _NPL_SERVERMATCHMAKING_H
+#endif // __NPL_C_INTERFACE__
+#endif // _NPL_SERVERMATCHMAKING_H

@@ -1,7 +1,7 @@
 # CHeaderToConfluceTool
 Parse C/C++ .h to xml. Convert xml to markdown. Convert markdown to confluence.
 
-
+Use C++ .h to generate .h and .cpp files in C.
 
 
 
@@ -17,16 +17,14 @@ copy tools/xsltproc/xyz/bin to git/usr/bin
 
 
 
-
-
 modify auto.sh ------ auto.bat path
 
 modify auto.bat ------ md2confl.exe path
 
 
 
-
-
 put .h files in ./
 
 ./auto.sh
+
+run C++toC.py

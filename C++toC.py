@@ -1,8 +1,91 @@
 # -*- coding: utf-8 -*-
 import os
 from collections import Counter   #引入Counter
-path="D:\workspace(py)\jhy"
+path="D:\workspace(py)\c++headers"
 dirs=os.listdir(path)
+f2 = open("npl-c-interface.h",'w',encoding='utf-8')
+f3 = open("npl-c-interface.cpp", 'w', encoding='utf-8')
+hhead='''///
+/// COPYRIGHT NOTICE
+/// CopyRight (c) 2018 Boltrend China
+/// All right reserved
+///
+/// \\file npl-c-interface.h
+///
+/// \\brief NPL c api export
+///
+
+#ifndef __NPL_C_INTERFACE_H__
+#define __NPL_C_INTERFACE_H__
+
+#define __NPL_C_INTERFACE__
+#include <npl-base-c-interface.h>
+
+#include "npl-user.h"
+#include "npl-network.h"
+#include "npl-friend.h"
+#include "npl-storage.h"
+#include "npl-matchmaking.h"
+#include "npl-serverMatchmaking.h"
+#include "npl-leaderboard.h"
+#include "npl-voice.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif\n'''
+chead='''#include "npl-header.h"
+#include "npl-inner.h"
+#include "npl-callback.h"
+#include "npl.h"
+
+#include "npl-network.h"
+#include "npl-friend.h"
+#include "npl-matchmaking.h"
+#include "npl-storage.h"
+#include "npl-sensitiveword.h"
+#include "npl-serverMatchmaking.h"
+#include "npl-callback.h"
+#include "npl-exception.h"
+#include "npl-voice.h"
+#include "npl-gameServer.h"
+
+#include "npl-c-interface.h"
+
+#include <fstream>
+#ifdef WIN32
+	#include <shellapi.h>
+#endif // WIN32
+//
+//NPL_API bool RestartAppIfNecessary(sint32_t appID)
+//{
+//	fstream fs;
+//	fs.open(".\\npl_appid.txt");
+//	if (fs.is_open())
+//	{
+//		sint32_t appID_t = 0;
+//		fs >> appID_t;
+//		if (appID_t > 0)
+//		{
+//			appID = appID_t;
+//			return false;
+//		}
+//	}
+//	if (appID == 0)
+//	{
+//		return false;
+//	}
+//
+//	auto url = std::string("nplp://rungameid/") + std::to_string(appID);
+//
+//#ifdef WIN32
+//	ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+//#endif // WIN32
+//	return true;
+//}
+//\n\n'''
+f2.write(hhead)
+f3.write(chead)
 for file in dirs:
         print(file)
         funcs=[]
@@ -47,7 +130,7 @@ for file in dirs:
         f1 = open(file, 'r', encoding='utf-8')
         modify_times = 0  # 统计修改次数
         start=0
-        f2 = open(name+"-C"+suffix,'w',encoding='utf-8')
+        #f2 = open(name+"-C"+suffix,'w',encoding='utf-8')
         for lines in f1:
                 if start==1:
                         if old_str in lines:
@@ -70,13 +153,12 @@ for file in dirs:
                                 lines =lines.replace("        ","        TODO:OVERLOAD ")
                         #把不需要的元素去掉
                         needflag=1
-                        for str in ["#endif","public:"]:
+                        for str in ["#endif","public:",'{','}']:
                                 if str in lines:
                                         needflag=0
                         # lines修改格式
-                        lines=lines.replace("};","wudi")
-                        lines=lines.replace('}','')
-                        lines=lines.replace("wudi",'}')
+                        lines=lines.replace("    ",'\t')
+                        lines=lines.replace("\t\t",'\t')
                         if needflag==1:
                                 f2.write(lines)
                 if flag in lines:
@@ -90,7 +172,7 @@ for file in dirs:
         space2=space2.capitalize()
         f1 = open(file, 'r', encoding='utf-8')
         modify_times = 0  # 统计修改次数
-        f3 = open(name + "-C" + ".cpp", 'w', encoding='utf-8')
+        #f3 = open(name + "-C" + ".cpp", 'w', encoding='utf-8')
         for lines in f1:
                 if flag in lines:
                         start=1
@@ -125,5 +207,10 @@ for file in dirs:
                                 f3.write(lines)
         print('生成的.c文件函数数目：',modify_times)
         f1.close()
-        f2.close()
-        f3.close()
+htail='''\n#ifdef __cplusplus
+}
+#endif
+#endif // !NPL_C_INTERFACE_H__'''
+f2.write(htail)
+f2.close()
+f3.close()

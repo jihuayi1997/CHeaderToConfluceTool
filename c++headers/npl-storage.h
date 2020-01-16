@@ -40,6 +40,16 @@ enum enPublishedFileVisibility
 	eVisibility_Private = 1,
 };
 
+enum enStorageSyncType
+{
+	/// use latest-based
+	eSyncType_latestBased = 0,
+	/// use remote-based
+	eSyncType_remoteBased = 1,
+	/// use remote-based
+	eSyncType_localBased = 2,
+};
+
 #pragma pack(push, NPL_PACK_SIZE)
 ///
 /// \brief  文件详细信息
@@ -91,6 +101,8 @@ struct cbLocaleFilePushCompleted
 	char filename[NPL_FILE_LEN];
 	/// 文件路径
 	char pathname[NPL_PATH_LEN];
+	/// 文件大小
+	uint64_t filesize;
 };
 
 ///
@@ -105,6 +117,8 @@ struct cbRemoteFilePullCompleted
 	char filename[NPL_FILE_LEN];
 	/// 文件路径
 	char pathname[NPL_PATH_LEN];
+	/// 文件大小
+	uint64_t filesize;
 };
 
 ///
@@ -239,6 +253,12 @@ struct cbSyncFilesResult_t
 struct cbStreamWriteAbortResult_t
 {
 	enum { iEvtType = enNplStorage + 13 };
+	/// opened filename
+	char filename[NPL_FILE_LEN];
+	/// locale pathname
+	char pathname[NPL_PATH_LEN];
+	/// stream file handle
+	StreamFileHandle_t handle;
 };
 
 /// 
@@ -351,6 +371,111 @@ struct cbUGCUpdatePublishedCommitResult_t
 	enum { iEvtType = enNplStorage + 21 };
 	//发布内容句柄
 	PublishedFileId_t publishedFileId;
+};
+
+/// 
+/// \brief  同步开始通知
+///
+struct cbStorageSyncBegin_t
+{
+	enum { iEvtType = enNplStorage + 22 };
+
+	/// 需要下载的文件，远端对应文件大小总和
+	uint64_t downloadBytes;
+	/// 需要上传的文件，本地对应文件大小总和
+	uint64_t uploadBytes;
+	/// 需要下载的文件数量
+	uint32_t downloadCount;
+	/// 需要上传的文件数量
+	uint32_t uploadCount;
+	/// 需要从远端删除的文件数量
+	uint32_t forgotCount;
+	/// 需要从本地删除的文件数量
+	uint32_t deleteCount;
+	/// 创建同步任务失败的文件数量
+	uint32_t errorCount;
+};
+
+/// 
+/// \brief  同步结束通知
+///
+struct cbStorageSyncEnd_t
+{
+	enum { iEvtType = enNplStorage + 23 };
+
+	/// 下载的字节总数
+	uint64_t downloadBytes;
+	/// 上传的字节总数
+	uint64_t uploadBytes;
+	/// 下载成功的文件数量
+	uint32_t downloadSucceed;
+	/// 下载失败的文件数量
+	uint32_t downloadFailed;
+	/// 上传成功的文件数量
+	uint32_t uploadSucceed;
+	/// 上传失败的文件数量
+	uint32_t uploadFailed;
+	/// 从远端删除成功的文件数量
+	uint32_t forgotSuccess;
+	/// 从远端删除失败的文件数量
+	uint32_t forgotFailed;
+	/// 从本地删除成功的文件数量
+	uint32_t deleteSuccess;
+	/// 从本地删除失败的文件数量
+	uint32_t deleteFailed;
+};
+
+/// 
+/// \brief  同步询问
+///
+struct cbStorageSyncAsk_t
+{
+	enum { iEvtType = enNplStorage + 24 };
+
+	/// localOlder 和 localInexistence 远端文件大小总和
+	uint64_t downloadBytes;
+	/// remoteOlder 和 remoteInexistence 本地文件大小总和
+	uint64_t uploadBytes;
+	/// 本地较旧文件数量
+	uint32_t localOlder;
+	/// 远端较旧文件数量
+	uint32_t remoteOlder;
+	/// 本地不存在的文件数量
+	uint32_t localInexistence;
+	/// 远端不存在的文件数量
+	uint32_t remoteInexistence;
+};
+
+/// 
+/// \brief  notify locale file push to remote start
+///
+struct cbLocaleFilePushStart
+{
+	enum { iEvtType = enNplStorage + 25 };
+	/// 游戏APPID
+	NPL_APPID appId;
+	/// 文件名
+	char filename[NPL_FILE_LEN];
+	/// 文件路径
+	char pathname[NPL_PATH_LEN];
+	/// 文件大小
+	uint64_t filesize;
+};
+
+/// 
+/// \brief  notify remote file pull to locale start
+///
+struct cbRemoteFilePullStart 
+{
+	enum { iEvtType = enNplStorage + 26 };
+	/// 游戏APPID
+	NPL_APPID appId;
+	/// 文件名
+	char filename[NPL_FILE_LEN];
+	/// 文件路径
+	char pathname[NPL_PATH_LEN];
+	/// 文件大小
+	uint64_t filesize;
 };
 
 #pragma pack(pop)
@@ -495,7 +620,7 @@ namespace npl
 		/// \return	远程文件句柄，失败返回 -1
 		///
 		/// \note	流文件上传时必须先调用该函数初始化，该函数在访问服务器不畅时会产生阻塞。
-		/// \see	StreamFileWrite StreamFileClose
+		/// \see	StreamFileWrite StreamFileClose StreamFileAbort
 		/// 
 		virtual StreamFileHandle_t StreamFileOpen(cstr_t pFileName) = 0;
 
@@ -511,7 +636,7 @@ namespace npl
 		/// \note	该函数是一个异步操作，但并不是每个调用都会触发一个对应的异步回应。
 		///			该操作会以通知的方式告知流数据的上传情况，
 		///			可以通过调用RegistNotify函数注册eEvent_StorageStreamWriteChunk事件来获取通知。
-		///	\see	RegistNotify cbStreamWriteChunkResult_t eEvent_StorageStreamWriteChunk
+		///	\see	RegistNotify cbStreamWriteChunkResult_t
 		/// 
 		virtual bool StreamFileWrite(StreamFileHandle_t hFile, cvoid_t pData, size_t nSize) = 0;
 
@@ -525,7 +650,7 @@ namespace npl
 		/// \note	该操作是一个异步操作，但并不会立即执行，而是等待所有已提交数据都完成上传后才真正提交。
 		///			该操作会以通知的方式告知文件关闭情况。
 		///			可以通过调用RegistNotify函数注册eEvent_StorageStreamWriteClose事件来获取通知。
-		///	\see	RegistNotify cbStreamCloseFileResult_t eEvent_StorageStreamWriteClose
+		///	\see	RegistNotify cbStreamCloseFileResult_t
 		///
 		virtual bool StreamFileClose(StreamFileHandle_t hFile) = 0;
 
@@ -537,22 +662,34 @@ namespace npl
 		/// \return	是否已取消上传
 		/// 
 		/// \note	文件上传取消后服务器会恢复到之前的文件版本
-		///	\see	RegistNotify eEvent_StorageStreamWriteAbort
+		///	\see	RegistNotify cbStreamWriteAbortResult_t
 		/// 
 		virtual bool StreamFileAbort(StreamFileHandle_t hFile) = 0;
 
 		///
-		/// \brief	同步文件
+		/// \brief	同步文件 (SyncFiles(eSyncType_latestBased))
 		///
 		/// \return	同步请求是否已提交
 		///
 		/// \note	同步操作会将本地文件和服务器文件进行合并处理。\
 		///			本地未上传或更新过的文件会被推送到服务器，\
 		///			远程未下载或更新过的文件会被拉取到本地。\
-		///			同步文件会发送三个通知，cbRemoteFilePullCompleted 、 cbLocaleFilePushCompleted，cbSyncFilesResult_t\
-		///	\see	RegistNotify cbRemoteFilePullCompleted cbLocaleFilePushCompleted cbSyncFilesResult_t
+		///			同步文件会发送通知，cbSyncFilesResult_t, cbRemoteFilePullCompleted, cbLocaleFilePushCompleted, cbRemoteFilePullStart, cbLocaleFilePushStart, cbStorageSyncBegin_t, cbStorageSyncEnd_t
+		///	\see	RegistNotify cbSyncFilesResult_t, cbRemoteFilePullCompleted, cbLocaleFilePushCompleted, cbRemoteFilePullStart, cbLocaleFilePushStart, cbStorageSyncBegin_t, cbStorageSyncEnd_t
 		/// 
 		virtual bool SyncFiles() = 0;
+
+		///
+		/// \brief	同步文件
+		///
+		/// \param  eSyncType: 同步方式
+		///
+		/// \return	同步请求是否已提交
+		///
+		/// \note	同步文件会发送通知，cbSyncFilesResult_t, cbRemoteFilePullCompleted, cbLocaleFilePushCompleted, cbRemoteFilePullStart, cbLocaleFilePushStart, cbStorageSyncBegin_t, cbStorageSyncEnd_t
+		///	\see	RegistNotify cbSyncFilesResult_t, cbRemoteFilePullCompleted, cbLocaleFilePushCompleted, cbRemoteFilePullStart, cbLocaleFilePushStart, cbStorageSyncBegin_t, cbStorageSyncEnd_t
+		/// 
+		virtual bool SyncFiles(enStorageSyncType eSyncType) = 0;
 
 		///
 		/// \brief	获取本地游戏目录save文件夹内的文件数量
